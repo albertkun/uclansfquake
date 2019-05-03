@@ -1,0 +1,72 @@
+{% extends 'layout.html' %}
+{% block body %}
+<h1>2D Concrete Moment Frame Model</h1>
+{% from "includes/_formhelpers.html" import render_field %}
+<div class="col-md-3">
+    <form method="POST" action="">
+        <div class="form-group">
+            {{render_field(form.earthquake_select, class_="form-control")}}
+        </div>
+        <div class="form-group">
+            {{render_field(form.building_select, class_="form-control")}}
+        </div>
+        <div class="form-group">
+            {{render_field(form.site_select, class_="form-control")}}
+        </div>
+        <p><input type="submit" class="btn btn-primary" value="Submit"></p>
+    </form>
+</div>
+
+<div class="col-md-8">
+    <div id="map"></div>
+    <script>
+      function initMap() {
+        var epicenter = {lat: 34.2057, lng: -118.5539};
+        var map = L.map('map').setView(epicenter, 11);
+        //var map = new google.maps.Map(document.getElementById('map'), {
+          //zoom: 10,
+          //center: epicenter
+        //});
+        L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.{ext}', {
+          attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          subdomains: 'abcd',
+          minZoom: 0,
+          maxZoom: 18,
+          ext: 'png'
+        }).addTo(map);
+        
+        var contentString = '<div id="content">'+
+            '<div id="siteNotice">'+
+            '</div>'+
+            '<h1 id="firstHeading" class="firstHeading">Northridge</h1>'+
+            '<div id="bodyContent">'+
+            '<p><b>Northridge Earthquake, </b>, ' +
+            'A 6.7 Magnitude earthquake occured in Los Angeles in Jan 17 1994. '+
+            '</p>'+
+            '</div>'+
+            '</div>';
+
+        var infowindow = new google.maps.InfoWindow({
+          content: contentString
+        });
+
+        L.marker(epicenter).addTo(map)
+        .bindPopup(contentString);
+        
+        
+//        var marker = new google.maps.Marker({
+//          position: epicenter,
+//          map: map
+//        });
+
+//        marker.addListener('click', function() {
+//          infowindow.open(map, marker);
+//        });
+//
+      }
+    </script>
+
+</div>
+
+
+{% endblock %}

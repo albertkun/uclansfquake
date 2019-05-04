@@ -16,6 +16,7 @@ numpy==1.16.3
 peewee==3.9.5
 plotly==3.8.1
 psycopg2==2.8.2
+gunicorn
 pyrsistent==0.15.1
 pytz==2019.1
 requests==2.21.0

@@ -17,7 +17,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 venv/
-# config.py
+config.py
 # =========================
 # Operating System Files
 # =========================

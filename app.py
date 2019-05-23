@@ -1,5 +1,5 @@
 from flask import Flask, render_template,flash, redirect, request, url_for,jsonify,abort,make_response, Response
-
+from decimal import Decimal
 from models import *
 
 
@@ -32,6 +32,12 @@ app.config['SECRET_KEY'] = 'ggsimida'
 
 # init MYSQL
 # mysql = MySQL(app)
+
+# decimal function
+def decimal_default_proc(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)
+    raise TypeError
 
 
 # Index
@@ -66,7 +72,63 @@ class RegisterForm(Form):
 
 
 ### Refactorrrr!!! Need to make one call so that each page can fill out the appropriate form! (Instead of hard coding it here)
+def data_to_tuple(data_in,label_column,prefix="",suffix=""):
+    new_array = []
+    data_tuple = [tuple(d.values()) for d in data_in]
+    for data in data_tuple:
+        # print(data)
+        if data[0] is not None:
+            data_id = data[0]
+            data_label = prefix+str(data[label_column])+suffix
+            new_array.append([data_id,data_label])
+    return new_array
+
+global site_query 
+site_query = [site for site in Sites.select().dicts()]
+global site_query2
+site_query2 = [site for site in Sites.select()]
+
+class RequestForVisualizations(Form):
+    
+    # site_tuple= [tuple(d.values()) for d in site_query]
+    # site_choices = []
+    # for site in site_tuple:
+    #     site_id = site[0]
+    #     site_latlng = "Site #"+str(site[0])
+    #     site_choices.append([site_id,site_latlng])
+    # site_choices = [value for value in site_choices]
+    site_choices = data_to_tuple(site_query,0,prefix="#")
+
+    # print(site_choices)
+    # site_choices = dict_to_array(site_query,'idsite')
+    earthquake_query = [earthquake for earthquake in Earthquake.select().dicts()]
+
+    building_query = [building for building in Building.select().dicts()]
+    building_choices = data_to_tuple(building_query,1,suffix=" Stories")
+    earthquake_choices = data_to_tuple(earthquake_query,2)
+    # print("site list 50")
+    # site_list = dict_to_array(site_query['idsite'].items())
+    # earthquake_list = dict_to_array(earthquake_query.items())
+    # building_query = dict_to_array(building_query.items())
+
+    # print("building_query")
+    # print(building_choices)
+    site_select = SelectMultipleField('Site',
+                                choices=site_choices,
+                                coerce=int
+                                )        
+    earthquake_select = SelectField('Earthquake',
+                            choices=earthquake_choices,
+                            coerce=int
+                             )
+
+    building_select = SelectField('Building Height',
+                           choices=building_choices,
+                           coerce=int
+                           )
+
 # Request Form Class
+# form = RequestForVisualizations(Form)
 class RequestFormOpenSeesCMF(Form):
     siteChoice = []
     for i in range(1, 153):
@@ -188,7 +250,8 @@ def dashboard():
 # Visualization CMF
 @app.route('/visualizationCMF',methods=['GET', 'POST'])
 def visualizationCMF():
-    form = RequestFormOpenSeesCMF(request.form)
+    form = RequestForVisualizations(request.form)
+    # form = RequestFormOpenSeesCMF(request.form)
     if request.method == 'POST' and form.validate():
         # Get Form Fields
         site = form.site_select.data # site is a list for multiple choices
@@ -196,9 +259,7 @@ def visualizationCMF():
         building = form.building_select.data
         # Create cursor
         # cur = mysql.connection.cursor()
-        print("site")
-        print(site)
-        # print building
+
         # Get number of story
         the_building = Building.get(Building.idbuilding == building).idbuilding
         print("the building:")
@@ -230,10 +291,8 @@ def visualizationCMF():
         
         for iSite in site:
             responses = Response.select().where((Response.idearthquake == earthquake) & (Response.idsite == iSite) & (Response.idbuilding == building))
-            PFA = []
-            SDR = []
-            SDR.append(0.0)
-            PFA.append(0.0)
+            PFA = [0.0]
+            SDR = [0.0]
             
             for res in responses:
                 print("res")
@@ -344,9 +403,12 @@ def visualizationCMF():
                                ids=ids,
                                graphJSON=graphJSON)
 
-
-
-    return render_template('visualizationCMF.html',form=form)
+    # json_data = jsonify(site_query)
+    # return render_template('visualizationCMF.html',form=form)
+    site_query_data=json.dumps(site_query, default=decimal_default_proc)
+    # print("site_query")
+    # print(site_query_data['siteid'])
+    return render_template('visualizationCMF.html',form=form,site_query=site_query)
 
 @app.teardown_request
 def _db_close(exc):

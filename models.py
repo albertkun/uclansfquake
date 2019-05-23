@@ -11,17 +11,17 @@ host=Config.HOST, port=Config.PORT)
 
 db.connect()
 
-class Earthquake(Model):
-    idearthquake = IntegerField(primary_key=True)
-    name = CharField()
-    magnitude = DecimalField()
-    latepc = DecimalField()
-    longepc = DecimalField()
-    date = DateTimeField()
+# class Earthquake(Model):
+#     idearthquake = IntegerField(primary_key=True)
+#     name = CharField()
+#     magnitude = DecimalField()
+#     latepc = DecimalField()
+#     longepc = DecimalField()
+#     date = DateTimeField()
 
-    class Meta:
-        database = db
-        db_table = 'earthquakes'
+#     class Meta:
+#         database = db
+#         db_table = 'earthquakes'
 
 class Response(Model):
     idsite = IntegerField(primary_key=True)
@@ -40,3 +40,21 @@ class Building(Model):
     class Meta:
         database = db
         db_table = 'buildings'    
+
+class Sites(Model):
+    idsite = IntegerField(primary_key=True)
+    latitude = DecimalField()
+    longitude = DecimalField()
+    class Meta:
+        database = db
+        db_table = 'site_locations'
+
+class Earthquake(Model):
+    quakeid = IntegerField(primary_key=True)
+    magnitude = DecimalField()
+    earthquake = CharField()
+    date = DateTimeField()
+
+    class Meta:
+        database = db
+        db_table = 'earthquakes'

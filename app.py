@@ -405,7 +405,7 @@ def visualizationCMF():
 
     # json_data = jsonify(site_query)
     # return render_template('visualizationCMF.html',form=form)
-    site_query_data=json.dumps(site_query, default=decimal_default_proc)
+    # site_query_data=json.dumps(site_query, default=decimal_default_proc)
     # print("site_query")
     # print(site_query_data['siteid'])
     return render_template('visualizationCMF.html',form=form,site_query=site_query)

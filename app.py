@@ -7,7 +7,6 @@ from models import *
 from wtforms import Form, StringField, PasswordField, validators, IntegerField, SelectField, SelectMultipleField
 # from passlib.hash import sha256_crypt
 from functools import wraps
-import json
 import plotly
 import numpy as np
 import operator
@@ -85,8 +84,9 @@ def data_to_tuple(data_in,label_column,prefix="",suffix=""):
 
 global site_query 
 site_query = [site for site in Sites.select().dicts()]
-global site_query2
-site_query2 = [site for site in Sites.select()]
+
+global site_data 
+site_data = Sites.select()
 
 class RequestForVisualizations(Form):
     
@@ -405,10 +405,10 @@ def visualizationCMF():
 
     # json_data = jsonify(site_query)
     # return render_template('visualizationCMF.html',form=form)
-    site_query_data=json.dumps(site_query, default=decimal_default_proc)
+    # site_query_data=json.dumps(site_query, default=decimal_default_proc)
     # print("site_query")
     # print(site_query_data['siteid'])
-    return render_template('visualizationCMF.html',form=form,site_query=site_query)
+    return render_template('visualizationCMF.html',form=form,site_query=site_data)
 
 @app.teardown_request
 def _db_close(exc):

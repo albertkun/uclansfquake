@@ -12,7 +12,8 @@
             font-size: 10px;
           }
 </style>
-<h1>2D Concrete Moment Frame Model</h1>
+
+<h1>{{ datatable }} Concrete Moment Frame Model</h1>
 {% from "includes/_formhelpers.html" import render_field %}
 <div class="col-md-3">
     <form method="POST" action="">
@@ -72,24 +73,6 @@
 
         L.circleMarker([epicenter.lat,epicenter.lng],epicenter.markerOptions).addTo(qmap).bindPopup(contentString)
         
-
-
-        ///////  begin area to add markers to the map
-
-        
-        //////// end marker adding
-
-//        var marker = new google.maps.Marker({
-//          position: epicenter,
-//          map: map
-//        });
-
-//        marker.addListener('click', function() {
-//          infowindow.open(map, marker);
-//        });
-//
-      
-
         var IDlist=[]
     
     

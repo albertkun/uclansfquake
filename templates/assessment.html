@@ -1,0 +1,70 @@
+{% extends 'layout.html' %}
+{% block body %}
+
+<link rel="stylesheet" href="../static/css/detail.css"" />
+<style>
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr 1fr 1fr;
+        grid-template-rows: 1fr 1fr 1fr;
+        grid-template-areas: "Contents Graphs Graphs Graphs" "Contents Graphs Graphs Graphs" "Contents Graphs Graphs Graphs";
+        grid-column-gap: 8ch;
+        }
+        
+        .Contents {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-row-gap: .25ch;
+        grid-area: Contents;
+        }
+
+          img { max-width: 75%; max-height: 100%; }
+        .Graphs { grid-area: Graphs; }
+        select option[data-default] {
+            color: #888;
+          }
+</style>
+<script>
+    console.log('hello')
+    function myFunction(data){
+        var obj = JSON.parse(data)
+        document.getElementById("g1").innerHTML = '<div id="g1"><h3>'+obj.title+'</h3><img src="/static'+obj.path+'";></div>';
+    }
+
+
+
+</script>
+<h1>Assessment framework of structural safety and seismic risk</h1>
+
+<h4>Select building type and models:</h4>
+      <div class="grid-container">
+          <section class="Contents">
+                {% for group in model_groups %}
+                    <details>      
+                        <summary><h3>{{group.model}}</h3></summary>
+                            {% for table in assessment_groups %}
+                                {% if table.model == group.model%}
+                                <h4>{{table.friendly_name}}</h4>
+                                    <select class="form-control" id="building_select" name="building_select" onchange="myFunction(this.value)">
+                                        <option value="" selected data-default disabled>{{table.select_helper}}
+                                        </option>
+                                        {% for data in af_data | sort(attribute='id_af')%}
+                                            {% if data.table_group == table.table_group %}
+                                                <option value='{"path":"{{ data.path }}","title":"{{ data.title }}"}'>{{ data.short_title }}
+                                                </option >
+                                            {% endif %}
+                                        {% endfor %}     
+                                        </select>
+                                {% endif %}
+                            {% endfor %}
+                        </select>                        
+                    </details>                                
+                    {% endfor %}
+        </section>                     
+            <div class="Graphs" id="grapharea">
+                <div id="g1">
+                </div>
+            </div>
+          </div>
+
+{% endblock %}

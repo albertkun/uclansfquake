@@ -13,24 +13,33 @@
           <ul class="nav navbar-nav">
             <li><a href="/">Home</a></li>
             <li><a href="/about">About</a></li>
+            <li><a href="/publications">Publications</a></li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Research <span class="caret"></span></a>
                 <ul class="dropdown-menu">
-                    <li class="dropdown-header">Visualization</li>
-                    <li><a href="/visualizationCMF">2D Concrete Moment Frame Building</a></li>
-                    <li><a href="#">3D Concrete Core Wall Building</a></li>
-                    <li role="separator" class="divider"></li>
+                    <li><a href="/visualizationCMF/2d">2D Concrete Moment Frame Building</a></li>
+                    <li><a href="/visualizationCMF/3d">3D Concrete Core Wall Building</a></li>
+                    <li><a href="/assessment/">Seismic Assessment Framework</a></li>
                 </ul>
             </li>
-            <li><a href="#">Examples</a></li>
-          </ul>
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Download <span class="caret"></span></a>
-          <ul>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Download <span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                  <li><a href="./data/download/responses_2d_201906251443.csv">2D Concrete Moment Frame Building</a></li>
+                  <li><a href="./data/download/responses_3d_201906251443.csv">3D Concrete Core Wall Building</a></li>
+              </ul>
+          </li>
+
+            
+
+
+
+          <!-- <ul>
             <li class="dropdown-header">Download__</li>
             <li><a href="#">Earthquake Data</a></li>
             <li><a href="#">Building Data</a></li>
             
-          </ul>
+          </ul> -->
               <!-- <ul class="nav navbar-nav navbar-right"> -->
             <!-- {% if session.logged_in %}
               <li><a href="/dashboard">Dashboard</a></li>

@@ -23,7 +23,28 @@ db.connect()
 #         database = db
 #         db_table = 'earthquakes'
 
-class Response(Model):
+class AssessmentTable(Model):
+    friendly_name = CharField()
+    table_group = CharField(primary_key=True)
+    select_helper = CharField()
+    model = CharField()
+    class Meta:
+        database = db
+        db_table = 'assessment_groups'
+
+class AssessmentFramework(Model):
+    id_af = PrimaryKeyField()
+    path = CharField()
+    title = CharField()
+    short_title = CharField()
+    table_group = CharField()
+    class Meta:
+        database = db
+        db_table = 'assessment'
+
+
+
+class Response_2d(Model):
     idsite = IntegerField(primary_key=True)
     idearthquake = IntegerField()
     idbuilding = IntegerField()
@@ -34,9 +55,21 @@ class Response(Model):
         database = db
         db_table = 'responses'
 
+class Response_3d(Model):
+    idsite = IntegerField(primary_key=True)
+    idearthquake = IntegerField()
+    idbuilding = IntegerField()
+    psdr = DecimalField()
+    pfa = DecimalField()
+    idresponse = IntegerField()
+    class Meta:
+        database = db
+        db_table = 'responses_3d'
+
 class Building(Model):
     idbuilding = IntegerField(primary_key=True)
     level = IntegerField()
+    data_type = CharField()
     class Meta:
         database = db
         db_table = 'buildings'    

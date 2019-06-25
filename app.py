@@ -7,6 +7,7 @@ from models import *
 from wtforms import Form, StringField, PasswordField, validators, IntegerField, SelectField, SelectMultipleField
 # from passlib.hash import sha256_crypt
 from functools import wraps
+import json
 import plotly
 import numpy as np
 import operator
@@ -20,6 +21,8 @@ global events
 
 # Flask App
 # app = Flask(__name__, static_url_path='/static')
+
+
 
 # Config MySQL
 app.config['MYSQL_HOST'] = 'localhost'
@@ -50,24 +53,6 @@ def index():
 def about():
     return render_template('about.html')
 
-# Register Form Class
-class RegisterForm(Form):
-    name = StringField('Name', [
-        validators.Length(min=1, max=50),
-        validators.input_required()])
-    username = StringField('Username', [
-        validators.Length(min=4, max=25),
-        validators.input_required()])
-    email = StringField('Email', [
-        validators.Length(min=6, max=50)])
-    organization = StringField('Organization', [
-        validators.Length(min=1, max=100)])
-    password = PasswordField('Password', [
-        validators.Length(min=6, max=25),
-        validators.DataRequired(),
-        validators.EqualTo('confirm', message='Passwords do not match')
-    ])
-    confirm = PasswordField('Confirm Password')
 
 
 ### Refactorrrr!!! Need to make one call so that each page can fill out the appropriate form! (Instead of hard coding it here)
@@ -84,35 +69,41 @@ def data_to_tuple(data_in,label_column,prefix="",suffix=""):
 
 global site_query 
 site_query = [site for site in Sites.select().dicts()]
+global site_query2
+site_query2 = [site for site in Sites.select()]
 
-global site_data 
-site_data = Sites.select()
-
-class RequestForVisualizations(Form):
-    
-    # site_tuple= [tuple(d.values()) for d in site_query]
-    # site_choices = []
-    # for site in site_tuple:
-    #     site_id = site[0]
-    #     site_latlng = "Site #"+str(site[0])
-    #     site_choices.append([site_id,site_latlng])
-    # site_choices = [value for value in site_choices]
+class RequestForVisualizations2d(Form):
     site_choices = data_to_tuple(site_query,0,prefix="#")
 
-    # print(site_choices)
-    # site_choices = dict_to_array(site_query,'idsite')
     earthquake_query = [earthquake for earthquake in Earthquake.select().dicts()]
 
-    building_query = [building for building in Building.select().dicts()]
+    building_query = [building for building in Building.select().where(Building.data_type == '2d').dicts()]
     building_choices = data_to_tuple(building_query,1,suffix=" Stories")
     earthquake_choices = data_to_tuple(earthquake_query,2)
-    # print("site list 50")
-    # site_list = dict_to_array(site_query['idsite'].items())
-    # earthquake_list = dict_to_array(earthquake_query.items())
-    # building_query = dict_to_array(building_query.items())
 
-    # print("building_query")
-    # print(building_choices)
+    site_select = SelectMultipleField('Site',[validators.InputRequired()],
+                                choices=site_choices,
+                                coerce=int
+                                )        
+    earthquake_select = SelectField('Earthquake',
+                            choices=earthquake_choices,
+                            coerce=int
+                             )
+
+    building_select = SelectField('Building Height',
+                           choices=building_choices,
+                           coerce=int
+                           )
+
+class RequestForVisualizations3d(Form):
+    site_choices = data_to_tuple(site_query,0,prefix="#")
+
+    earthquake_query = [earthquake for earthquake in Earthquake.select().dicts()]
+
+    building_query = [building for building in Building.select().where(Building.data_type == '3d').dicts()]
+    building_choices = data_to_tuple(building_query,1,suffix=" Stories")
+    earthquake_choices = data_to_tuple(earthquake_query,2)
+
     site_select = SelectMultipleField('Site',
                                 choices=site_choices,
                                 coerce=int
@@ -127,117 +118,28 @@ class RequestForVisualizations(Form):
                            coerce=int
                            )
 
-# Request Form Class
-# form = RequestForVisualizations(Form)
-class RequestFormOpenSeesCMF(Form):
-    siteChoice = []
-    for i in range(1, 153):
-        siteChoice.append((i, str(i)))
-
-    #site = IntegerField('Site, choose from 1-152', [
-    #    validators.NumberRange(min=1,max=152),
-    #    validators.input_required()])
-    site_select = SelectMultipleField('Site',
-                                choices=siteChoice,
-                                coerce=int
-                                )
-
-    earthquake_select = SelectField('Earthquake',
-                            choices=[(1, 'Northridge')],
-                            coerce=int
-                             )
-    ### refactor to call from database!!!! ###
-    building_select = SelectField('Building Height',
-                           choices=[(1, '2 Story'), (2, '4 Story'), (3, '8 Story'), (4, '12 Story'),(5, '20 Story')],
-                           coerce=int
-                           )
-
 # User Register
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    form = RegisterForm(request.form)
-    if request.method == 'POST' and form.validate():
-        name = form.name.data
-        email = form.email.data
-        username = form.username.data
-        organization = form.organization.data
-        password = sha256_crypt.encrypt(str(form.password.data))
+@app.route('/assessment/', methods=['GET', 'POST'])
+def assessment():
+    assessment_groups = (AssessmentTable.select())
 
-        # Create cursor
-        cur = mysql.connection.cursor()
+    model_groups = AssessmentTable.select(AssessmentTable.model).distinct()
 
-        # Execute query
-        cur.execute("INSERT INTO users(name, email, username, organization, password) "
-                    "VALUES(%s, %s, %s, %s, %s)", (name, email, username, organization, password))
-        # Commit to DB
-        mysql.connection.commit()
+    af_data = (AssessmentFramework.select())
 
-        # Close connection
-        cur.close()
-
-        flash('You are now registered and can log in', 'success')
-        return redirect(url_for('login'))
-
-    return render_template('register.html', form=form)
+    return render_template('assessment.html',af_data=af_data,assessment_groups=assessment_groups,model_groups=model_groups)
 
 
-# User login
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        # Get Form Fields
-        username = request.form['username']
-        password_candidate = request.form['password']
 
-        # Create cursor
-        cur = mysql.connection.cursor()
+@app.route('/publications/', methods=['GET', 'POST'])
+def publications():
 
-        # Get user by username
-        result = cur.execute("SELECT * FROM users WHERE username = %s", [username])
-
-        if result > 0:
-            # Get stored hash
-            data = cur.fetchone()
-            password = data['password']
-            # Compare Passwords
-            if sha256_crypt.verify(password_candidate, password):
-                # Passed
-                session['logged_in'] = True
-                session['username'] = username
-
-                flash('You are now logged in', 'success')
-                return redirect(url_for('dashboard'))
-            else:
-                error = 'Invalid login'
-                return render_template('login.html', error=error)
-            # Close connection
-            cur.close()
-        else:
-            error = 'Username not found'
-            return render_template('login.html', error=error)
-    return render_template('login.html')
+    return render_template('publications.html')
 
 
-# Check if user logged in
-def is_logged_in(f):
-    @wraps(f)
-    def wrap(*args, **kwargs):
-        if 'logged_in' in session:
-            return f(*args, **kwargs)
-        else:
-            flash('Unauthorized, Please login', 'danger')
-            return redirect(url_for('login'))
-
-    return wrap
-
-
-# Logout
-@app.route('/logout')
-# @is_logged_in
-def logout():
-    session.clear()
-    flash('You are now logged out', 'success')
-    return redirect(url_for('login'))
+@app.route('/<path:path>')
+def static_file(path):
+    return app.send_static_file(path)
 
 
 # Dashboard
@@ -248,18 +150,27 @@ def dashboard():
 
 
 # Visualization CMF
-@app.route('/visualizationCMF',methods=['GET', 'POST'])
-def visualizationCMF():
-    form = RequestForVisualizations(request.form)
-    # form = RequestFormOpenSeesCMF(request.form)
+@app.route('/visualizationCMF/<datatable>',methods=['GET', 'POST'])
+def visualizationCMF(datatable):
+
+    if datatable == '2d':
+        form = RequestForVisualizations2d(request.form)
+    
+    if datatable == '3d':
+        form = RequestForVisualizations3d(request.form)
+
+        # form = RequestFormOpenSeesCMF(request.form)
     if request.method == 'POST' and form.validate():
         # Get Form Fields
         site = form.site_select.data # site is a list for multiple choices
         earthquake = form.earthquake_select.data
         building = form.building_select.data
+        print("building")
+        print(building)
         # Create cursor
         # cur = mysql.connection.cursor()
 
+    
         # Get number of story
         the_building = Building.get(Building.idbuilding == building).idbuilding
         print("the building:")
@@ -273,8 +184,8 @@ def visualizationCMF():
 
         ### level is from database! ###
         level = (Building.get(Building.idbuilding == the_building).level)
-        # print "Building Height"
-        # print level
+        print("Building Height")
+        print(level)
         SDRData = []
         PFAData = []
 
@@ -288,17 +199,26 @@ def visualizationCMF():
         sumPFA = [0]*(level + 1)
 
 
-        
+
         for iSite in site:
-            responses = Response.select().where((Response.idearthquake == earthquake) & (Response.idsite == iSite) & (Response.idbuilding == building))
             PFA = [0.0]
-            SDR = [0.0]
-            
-            for res in responses:
-                print("res")
-                print(res.sdr)
-                SDR.append(float(res.sdr)*100)
-                PFA.append(float(res.pfa))
+            SDR = [0.0]            
+            if datatable == '2d':
+                responses = Response_2d.select().where((Response_2d.idearthquake == earthquake) & (Response_2d.idsite == iSite) & (Response_2d.idbuilding == building))
+                for res in responses:
+                    print("res")
+                    print(res.sdr)
+                    SDR.append(float(res.sdr)*100)
+                    PFA.append(float(res.pfa))                
+            if datatable == '3d':
+                responses = Response_3d.select().where((Response_3d.idearthquake == earthquake) & (Response_3d.idsite == iSite) & (Response_3d.idbuilding == building))
+                print('hello')
+                
+                for res in responses:
+                    print("res")
+                    print(res)
+                    SDR.append(float(res.psdr)*100)
+                    PFA.append(float(res.pfa))
 
             SDR.reverse
             PFA.reverse
@@ -311,40 +231,40 @@ def visualizationCMF():
             sumSDR = [sum(x) for x in zip(sumSDR, SDR)]
 
             SDRData.append(plotly.graph_objs.Scatter(x=SDR,
-                                                     y=list(range(level + 1)),
-                                                     name = 'Site-'+str(iSite),
-                                                     line = dict(width=1)
-                                                     )
-                           )
+                                                    y=list(range(level + 1)),
+                                                    name = 'Site-'+str(iSite),
+                                                    line = dict(width=1)
+                                                    )
+                        )
 
 
             sumPFA = [sum(x) for x in zip(sumPFA, PFA)]
 
             PFAData.append(plotly.graph_objs.Scatter(x=PFA,
-                                                     y=list(range(level + 1)),
-                                                     name='Site-' + str(iSite),
-                                                     line=dict(width=1)
-                                                     )
-                           )
+                                                    y=list(range(level + 1)),
+                                                    name='Site-' + str(iSite),
+                                                    line=dict(width=1)
+                                                    )
+                        )
 
 
         SDRData.append(plotly.graph_objs.Scatter(x=[ele/len(site) for ele in sumSDR],
-                                             y=list(range(level + 1)),
-                                             name='Mean',
-                                             line=dict(dash='longdash',
-                                                       color=('rgb(0, 0, 0)'),
-                                                       width=4)
+                                            y=list(range(level + 1)),
+                                            name='Mean',
+                                            line=dict(dash='longdash',
+                                                    color=('rgb(0, 0, 0)'),
+                                                    width=4)
                                                 )
-                       )
+                    )
 
         PFAData.append(plotly.graph_objs.Scatter(x=[ele / len(site) for ele in sumPFA],
-                                                 y=list(range(level + 1)),
-                                                 name='Mean',
-                                                 line=dict(dash='longdash',
-                                                           color=('rgb(0, 0, 0)'),
-                                                           width=4)
-                                                 )
-                       )
+                                                y=list(range(level + 1)),
+                                                name='Mean',
+                                                line=dict(dash='longdash',
+                                                        color=('rgb(0, 0, 0)'),
+                                                        width=4)
+                                                )
+                    )
 
 
 
@@ -400,20 +320,22 @@ def visualizationCMF():
         graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
 
         return render_template('plot.html',
-                               ids=ids,
-                               graphJSON=graphJSON)
+                            ids=ids,
+                            graphJSON=graphJSON)
 
-    # json_data = jsonify(site_query)
-    # return render_template('visualizationCMF.html',form=form)
-    # site_query_data=json.dumps(site_query, default=decimal_default_proc)
+        # json_data = jsonify(site_query)
+        # return render_template('visualizationCMF.html',form=form)
+        site_query_data=json.dumps(site_query, default=decimal_default_proc)
     # print("site_query")
     # print(site_query_data['siteid'])
-    return render_template('visualizationCMF.html',form=form,site_query=site_data)
+    datatable = datatable.upper()
+    return render_template('visualizationCMF.html',form=form,site_query=site_query,datatable=datatable)
 
 @app.teardown_request
 def _db_close(exc):
     if not db.is_closed():
         db.close()
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -49,9 +49,9 @@ def index():
 
 
 # About
-@app.route('/about')
+@app.route('/team')
 def about():
-    return render_template('about.html')
+    return render_template('team.html')
 
 
 
@@ -155,9 +155,11 @@ def visualizationCMF(datatable):
 
     if datatable == '2d':
         form = RequestForVisualizations2d(request.form)
+        the_title = 'Scenario Earthquake Structural Responses: Concrete Moment Frame Buildings'
     
     if datatable == '3d':
         form = RequestForVisualizations3d(request.form)
+        the_title = 'Scenario Earthquake Structural Responses: Concrete Core Wall Buildings'
 
         # form = RequestFormOpenSeesCMF(request.form)
     if request.method == 'POST' and form.validate():
@@ -329,7 +331,7 @@ def visualizationCMF(datatable):
     # print("site_query")
     # print(site_query_data['siteid'])
     datatable = datatable.upper()
-    return render_template('visualizationCMF.html',form=form,site_query=site_query,datatable=datatable)
+    return render_template('visualizationCMF.html',form=form,site_query=site_query,datatable=datatable,the_title=the_title)
 
 @app.teardown_request
 def _db_close(exc):
